@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ore Grinding Incremental Dice Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #18191a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #e4e6eb;
+        }
+
+        .container {
+            background-color: #242526;
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid #3a3b3c;
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #e4e6eb;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #b0b3b8;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #3a3b3c;
+            border: 1px solid #4b4c4d;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            color: #e4e6eb;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2d88ff;
+            box-shadow: 0 0 0 2px rgba(45, 136, 255, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #2d88ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #1a7cff;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(45, 136, 255, 0.15);
+            border-radius: 8px;
+            border-left: 5px solid #2d88ff;
+            display: none;
+        }
+        
+        #result p {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        #result p:last-child {
+            margin-bottom: 0;
+        }
+        
+        #result .highlight {
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        hr {
+            border: 0;
+            border-top: 1px solid #3a3b3c;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Ore Grinding Incremental Dice Calculator</h1>
+
+        <div class="input-group">
+            <label for="startLevel">Level of spawned dice</label>
+            <input type="number" id="startLevel" value="1" min="1" max="24">
+        </div>
+
+        <div class="input-group">
+            <label for="timePerDie">Time per new die (in seconds)</label>
+            <input type="number" id="timePerDie" value="0.6" step="0.1" min="0.1">
+        </div>
+
+        <div class="input-group">
+            <label for="targetLevel">Target dice level you want to achieve</label>
+            <input type="number" id="targetLevel" value="7" min="2" max="25">
+        </div>
+
+        <div class="input-group">
+            <label for="maxDice">Max dice on the board</label>
+            <input type="number" id="maxDice" value="15" min="1">
+        </div>
+
+        <button id="calculateBtn">Calculate</button>
+
+        <div id="result">
+        </div>
+    </div>
+
+    <script>
+        const startLevelInput = document.getElementById('startLevel');
+        const timePerDieInput = document.getElementById('timePerDie');
+        const targetLevelInput = document.getElementById('targetLevel');
+        const maxDiceInput = document.getElementById('maxDice');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultDiv = document.getElementById('result');
+
+        calculateBtn.addEventListener('click', calculateTime);
+
+        function calculateTime() {
+            const startLevel = parseInt(startLevelInput.value);
+            const timePerDie = parseFloat(timePerDieInput.value);
+            const targetLevel = parseInt(targetLevelInput.value);
+            const maxDice = parseInt(maxDiceInput.value);
+
+            if (isNaN(startLevel) || isNaN(timePerDie) || isNaN(targetLevel) || isNaN(maxDice)) {
+                resultDiv.innerHTML = '<p style="color: #ff5c5c;">Please enter valid numbers in all fields.</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            if (startLevel >= targetLevel) {
+                resultDiv.innerHTML = '<p style="color: #ff5c5c;">The target level must be higher than the start level.</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            if (timePerDie <= 0) {
+                 resultDiv.innerHTML = '<p style="color: #ff5c5c;">Time per die must be greater than 0.</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const levelDifference = targetLevel - startLevel;
+            const requiredBaseDice = Math.pow(2, levelDifference);
+            const totalSeconds = requiredBaseDice * timePerDie;
+            const timeToFillBoard = maxDice * timePerDie;
+
+            const formattedTotalTime = formatTime(totalSeconds);
+            const formattedFillTime = formatTime(timeToFillBoard);
+
+            resultDiv.innerHTML = `
+                <p>To create a <span class="highlight">Level ${targetLevel}</span> die, you will need a total of <span class="highlight">${requiredBaseDice.toLocaleString('en-US')}</span> Level ${startLevel} dice.</p>
+                <p>Estimated total time: <br><span class="highlight">${formattedTotalTime}</span></p>
+                <hr>
+                <p>Time to fill the board with <span class="highlight">${maxDice}</span> dice: <br><span class="highlight">${formattedFillTime}</span></p>
+            `;
+            resultDiv.style.display = 'block';
+        }
+        
+        function formatTime(totalSeconds) {
+            if (totalSeconds < 60) {
+                return `${totalSeconds.toFixed(2)} seconds`;
+            }
+
+            let days = Math.floor(totalSeconds / 86400);
+            totalSeconds %= 86400;
+            let hours = Math.floor(totalSeconds / 3600);
+            totalSeconds %= 3600;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = totalSeconds % 60;
+
+            let parts = [];
+            if (days > 0) parts.push(days + (days === 1 ? " day" : " days"));
+            if (hours > 0) parts.push(hours + (hours === 1 ? " hour" : " hours"));
+            if (minutes > 0) parts.push(minutes + (minutes === 1 ? " minute" : " minutes"));
+            if (seconds > 0) parts.push(seconds.toFixed(2) + " seconds");
+
+            return parts.join(', ');
+        }
+    </script>
+
+</body>
+</html>
